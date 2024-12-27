@@ -4,27 +4,46 @@ namespace CSharpIOHelper
 {
 	public class Program
 	{
-		static readonly IInputReader reader;
-		static readonly IOutputWriter writer;
+		static readonly InputProvider input;
+		static readonly OutputProvider output;
 
-		static readonly Action? onProgramClosing;
+		static Action? onProgramClosing;
 
 		static Program()
 		{
-			if (IsDebug()) {
+			input = new(GetReader());
+			output = new(GetWriter());
+
+			IInputReader GetReader()
+			{
 				const string PathToInputFile = "input.txt";
+
+				IInputReader reader;
+				if (IsDebug()) {
+					var fileReader = new FileReader(PathToInputFile);
+					onProgramClosing += fileReader.CloseFile;
+					reader = fileReader;
+				} else {
+					reader = new ConsoleReader();
+				}
+
+				return reader;
+			}
+
+			IOutputWriter GetWriter()
+			{
 				const string PathToOutputFile = "output.txt";
 
-				var fileReader = new FileReader(PathToInputFile);
-				onProgramClosing += fileReader.CloseFile;
-				reader = fileReader;
+				IOutputWriter writer;
+				if (IsDebug()) {
+					var fileWriter = new FileWriter(PathToOutputFile);
+					onProgramClosing += fileWriter.CloseFile;
+					writer = fileWriter;
+				} else {
+					writer = new ConsoleWriter();
+				}
 
-				var fileWriter = new FileWriter(PathToOutputFile);
-				onProgramClosing += fileWriter.CloseFile;
-				writer = fileWriter;
-			} else {
-				reader = new ConsoleReader();
-				writer = new ConsoleWriter();
+				return writer;
 			}
 		}
 
@@ -37,10 +56,9 @@ namespace CSharpIOHelper
 
 		private static void RunTest()
 		{
-			int count = int.Parse(reader.ReadLine());
-			for (int i = 0; i < count; ++i) {
-				writer.WriteLine("Hello, World!");
-			}
+			int arraySize = input.GetValue<int>();
+			var array = input.GetArray<string>(arraySize);
+			output.WriteLine(string.Join(", ", array));
 		}
 
 		private static bool IsDebug()
