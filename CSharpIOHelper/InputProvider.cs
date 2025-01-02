@@ -31,9 +31,9 @@ namespace CSharpIOHelper
 
 		public List<T> GetList<T>(int size) where T: IParsable<T>
 		{
-			List<T> list = [];
+			List<T> list = new(size);
 			for (int i = 0; i < size; ++i) {
-				list[i] = GetValue<T>();
+				list.Add(GetValue<T>());
 			}
 			return list;
 		}
